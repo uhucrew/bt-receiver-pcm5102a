@@ -1,0 +1,9 @@
+idf_component_register(SRCS "bt_app_av.c"
+                            "bt_app_core.c"
+                            "i2c_x.c"
+                            "SSD1306/lcd.c"
+                            "display.c"
+                            "button.c"
+                            "nvs_devices.c"
+                            "main.c"
+                    INCLUDE_DIRS ".")
