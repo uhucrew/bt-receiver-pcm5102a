@@ -49,7 +49,7 @@ static void bt_av_hdl_stack_evt(uint16_t event, void *p_param);
 
 const char *dev_name = "UHU";
 const int32_t default_sample_rate = 44100;
-static const int32_t volume_default = (int32_t)round(80.0 * 0x7f / 100.0);
+static const int32_t volume_default = (int32_t)round(55.0 * 0x7f / 100.0);
 uint8_t *remote_name = NULL;
 
 
@@ -155,7 +155,7 @@ void app_main(void)
         .sample_rate = default_sample_rate,
         .bits_per_sample = BIT_PER_SAMPLE,
         .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,                           //2-channels
-        .communication_format = I2S_COMM_FORMAT_I2S_MSB,
+        .communication_format = I2S_COMM_FORMAT_STAND_I2S,
         .dma_buf_count = 12,
         .dma_buf_len = 120,
         .intr_alloc_flags = 0,                                                  //Default interrupt priority

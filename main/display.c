@@ -116,7 +116,7 @@ void display_init() {
     snprintf(lcd_string_buffer, sizeof(lcd_string_buffer), "     %s", dev_name);
     fb_draw_string_big (0, 0, lcd_string_buffer);
     display_sample_rate(default_sample_rate);
-    init_vu_meter(1 << 31);
+    init_vu_meter(1 << 30);
     update_vu_meter((uint64_t[2]){ 0, 0 });
 
     xTaskCreate(

@@ -99,12 +99,12 @@ void bt_app_a2d_data_cb(const uint8_t *data, uint32_t len)
         }
         //shift arithmetic correct left justified 63 - BIT_PER_SAMPLE
         sample = sample << (64 - BIT_PER_SAMPLE);
-        sample = sample >> 1;
+        sample = sample >> 2;
 
         //apply volume
         sample = (int64_t)round((float)sample * f_volume);
         level[lr] = sample < 0 ? MAX(level[lr], -sample) : MAX(level[lr], sample);
-        sample = sample >> (63 - BIT_PER_SAMPLE);
+        sample = sample >> (62 - BIT_PER_SAMPLE);
         for (uint8_t j = 0; j < byte_per_sample; j++) {
             var_data[i + j] = (uint8_t)(sample & 0xff);
             sample = sample >> 8;
