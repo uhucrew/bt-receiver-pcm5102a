@@ -27,12 +27,21 @@ docker run --rm -v $PWD:/project --privileged --device=/dev/ttyUSB0 -w /project 
 ```
 
 
+## usage
+
+Press plus or minus buttons to adjust volume. Press and hold to rapidly change volume.
+Press both buttons to mute and both buttons again to restore volume.
+Press and hold both buttons to reset and pair with a new device.
+
+
 ## background
 
 This software is based on the "a2dp_sink" example from the Espressif development toolkit found in the path: esp-idf/examples/bluetooth/bluedroid/classic_bt/a2dp_sink
-Added volume control and a display with vu-meter to the example. Because of the interrupt-driven I2C I had to add functions for the display driver to transfer changes only to the display. Maybe a display with SPI connection is better suited.
+Added persistent device names based on bluetooth address, volume control and a display with vu-meter to the example. Because of the interrupt-driven I2C I had to add functions for the display driver to transfer changes only to the display. Maybe a display with SPI connection is better suited.
 For the OLED display and push buttons I modified code from this two projects:
 
 https://github.com/PIC-Nico/SSD1306
 
 https://github.com/craftmetrics/esp32-button
+
+
