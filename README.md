@@ -29,9 +29,10 @@ docker run --rm -v $PWD:/project --privileged --device=/dev/ttyUSB0 -w /project 
 
 ## usage
 
-Press plus or minus buttons to adjust volume. Press and hold to rapidly change volume.
-Press both buttons to mute and both buttons again to restore volume.
-Press and hold both buttons to reset and pair with a new device.
+- Press plus or minus buttons to adjust volume.
+- Press and hold to rapidly change volume.
+- Press both buttons to mute and both buttons again to restore volume.
+- Press and hold both buttons to reset and pair with a new device.
 
 
 ## background
