@@ -4,8 +4,9 @@ Well working bluetooth adapter with a nice display and volume control buttons. T
 
 ## hardware
 
-ESP32-WROOM-32 connected to SSD1306 128x64 display and PCM5102A breakout board
+ESP32-WROOM-32 connected to SSD1306 128x64 display and PCM5102A breakout board, schematics as follows:
 
+![schematics](bt_receiver_pcm5102a_schematics.png?raw=true "schematics")
 
 
 ## quick start
