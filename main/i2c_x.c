@@ -27,9 +27,9 @@ esp_err_t i2c_init(void)
                               I2C_MASTER_RX_BUF_DISABLE,
                               I2C_MASTER_TX_BUF_DISABLE, 0);
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "%s failed: %s\n", __func__, esp_err_to_name(ret));
+        ESP_LOGE(TAG, "%s failed: %s", __func__, esp_err_to_name(ret));
     }
-    ESP_LOGI(TAG, "%s successful\n", __func__);
+    ESP_LOGI(TAG, "%s successful", __func__);
 
     return ret;
 }
@@ -51,7 +51,7 @@ esp_err_t i2c_master_read_slave(uint8_t i2c_slave_addr, uint8_t *data_rd, size_t
     esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, wait_ms / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "%s failed: %s\n", __func__, esp_err_to_name(ret));
+        ESP_LOGE(TAG, "%s failed: %s", __func__, esp_err_to_name(ret));
     }
 
     return ret;
@@ -73,7 +73,7 @@ esp_err_t i2c_master_write_slave(uint8_t i2c_slave_addr, uint8_t *data_wr, size_
     esp_err_t ret = i2c_master_cmd_begin(I2C_MASTER_NUM, cmd, wait_ms / portTICK_RATE_MS);
     i2c_cmd_link_delete(cmd);
     if (ret != ESP_OK) {
-        ESP_LOGE(TAG, "%s failed: %s\n", __func__, esp_err_to_name(ret));
+        ESP_LOGE(TAG, "%s failed: %s", __func__, esp_err_to_name(ret));
     }
 
     return ret;

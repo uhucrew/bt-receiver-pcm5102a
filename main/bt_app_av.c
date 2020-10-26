@@ -47,11 +47,7 @@ static _lock_t s_volume_lock;
 static uint8_t s_volume = 0;
 static bool s_volume_notify;
 static bool s_volume_notify_disabled = false;
-static float f_volume = 0.0;
-static const float vol_exp_min = -1.5;
-static const float vol_exp_step = 3.5 / 127.0;
-static const float vol_exp_scale = 1.0 / exp(2);
-static const float vol_offset = 0.03;
+static uint32_t i_volume = 32;
 
 extern uint8_t *remote_name;
 
@@ -74,18 +70,27 @@ void bt_app_a2d_cb(esp_a2d_cb_event_t event, esp_a2d_cb_param_t *param)
 
 void bt_app_a2d_data_cb(const uint8_t *data, uint32_t len)
 {
-    static uint8_t *var_data;
-    static uint8_t byte_per_sample = BIT_PER_SAMPLE / 8;
-    static int64_t sample;
-    static uint64_t level[2];
+    static uint8_t *da_data = NULL;
+    static size_t da_len = 0;
+    static const uint8_t byte_per_sample = 2;
+    static const uint8_t byte_per_da_sample = 4;
+    static int16_t sample;
+    static int32_t da_sample;
+    static uint32_t level[2];
     static uint8_t lr;
 
     if (len % byte_per_sample != 0) ESP_LOGE(BT_AV_TAG, "data unaligned: %u", len);
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
-    var_data = data;
-#pragma GCC diagnostic pop
+    if (da_data == NULL) {
+        da_len = len << 1;
+        da_data = (uint8_t *)malloc(da_len);
+        ESP_LOGI(BT_AV_TAG, "allocated da buffer memory: %u bytes", da_len);
+    }
+    if (da_len < len << 1) {
+        da_len = len << 1;
+        realloc(da_data, da_len);
+        ESP_LOGI(BT_AV_TAG, "reallocated da buffer memory: %u bytes", da_len);
+    }
     level[0] = 0;
     level[1] = 0;
     lr = 0;
@@ -97,24 +102,20 @@ void bt_app_a2d_data_cb(const uint8_t *data, uint32_t len)
             sample = sample << 8;
             sample |= data[i + j];
         }
-        //shift arithmetic correct left justified 63 - BIT_PER_SAMPLE
-        sample = sample << (64 - BIT_PER_SAMPLE);
-        sample = sample >> 2;
 
         //apply volume
-        sample = (int64_t)round((float)sample * f_volume);
-        level[lr] = sample < 0 ? MAX(level[lr], -sample) : MAX(level[lr], sample);
-        sample = sample >> (62 - BIT_PER_SAMPLE);
-        for (uint8_t j = 0; j < byte_per_sample; j++) {
-            var_data[i + j] = (uint8_t)(sample & 0xff);
-            sample = sample >> 8;
+        da_sample = (int32_t)i_volume * sample;
+        level[lr] = da_sample < 0 ? MAX(level[lr], -da_sample) : MAX(level[lr], da_sample);
+        for (uint8_t j = 0; j < byte_per_da_sample; j++) {
+            da_data[2 * i + j] = (uint8_t)(da_sample & 0xff);
+            da_sample = da_sample >> 8;
         }
         //ESP_LOGI(BT_AV_TAG, "2: %02x%02x%02x%02x%02x%02x%02x%02x", var_data[i], var_data[i + 1], var_data[i + 2], var_data[i + 3], var_data[i + 4], var_data[i + 5], var_data[i + 6], var_data[i + 7]);
         lr ^= 1;
     }
     update_vu_meter(level);
 
-    write_ringbuf(data, len);
+    write_ringbuf(da_data, da_len);
     if (++s_pkt_cnt % 100 == 0) {
         ESP_LOGI(BT_AV_TAG, "Audio packet count %u", s_pkt_cnt);
         display_packets(s_pkt_cnt);
@@ -214,7 +215,7 @@ static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
             } else if (oct0 & (0x01 << 4)) {
                 sample_rate = 48000;
             }
-            i2s_set_clk(0, sample_rate, BIT_PER_SAMPLE, 2);
+            i2s_set_clk(0, sample_rate, 32, 2);
 
             ESP_LOGI(BT_AV_TAG, "Configure audio player %x-%x-%x-%x",
                      a2d->audio_cfg.mcc.cie.sbc[0],
@@ -336,20 +337,46 @@ static uint8_t vol_to_pct(uint8_t vol) {
     return (uint32_t)vol * 100 / 0x7f;
 };
 
-static float vol_calc(uint8_t vol) {
-    if (vol == 0) return 0.0;
-    if (vol == 0x7f) return 1.0;
 
-    return exp(vol_exp_min + vol_exp_step * s_volume) * vol_exp_scale - vol_offset;
+#define VOL_MIN         30.0
+#define VOL_MAX         65536.0
+
+/*
+//static const float vol_log_min = 3.46573590279973;      // precalculated: log(vol_min);
+//static const float vol_log_diff = 7.6246189861594;      // precalculated: log(vol_max) - log(vol_min);
+static const float vol_log_min = log(VOL_MIN);
+static const float vol_log_diff = log(VOL_MAX) - log(VOL_MIN);
+
+//calculate volume with exp function
+static uint32_t vol_calc_exp(uint8_t vol) {
+    if (vol == 0) return 0;
+    //if (vol == 0x7f) return VOL_MAX;
+
+    return floor(exp(vol_log_min + vol_log_diff / 100 * vol_to_pct(vol)));
 }
+*/
+
+#define VOL_POWER       3.0
+static const float vol_pow_min = pow(VOL_MIN, (1.0 / VOL_POWER));
+static const float vol_pow_diff = pow(VOL_MAX, (1.0 / VOL_POWER)) - pow(VOL_MIN, (1.0 / VOL_POWER));
+
+//calculate volume with power function
+static uint32_t vol_calc_pow(uint8_t vol) {
+    if (vol == 0) return 0;
+    if (vol == 0x7f) return VOL_MAX;
+
+    //ESP_LOGI(BT_RC_TG_TAG, "vol_pow_min: %f  vol_pow_diff: %f  vol_to_pct: %u  VOL_POWER: %f", vol_pow_min, vol_pow_diff, vol_to_pct(vol), VOL_POWER);
+    return floor(pow((vol_pow_min + vol_pow_diff / 100 * vol_to_pct(vol)), VOL_POWER));
+}
+
 
 static void volume_set_by_controller(uint8_t volume)
 {
     _lock_acquire(&s_volume_lock);
     s_volume = volume;
-    f_volume = vol_calc(volume);
+    i_volume = vol_calc_pow(volume);
     _lock_release(&s_volume_lock);
-    ESP_LOGI(BT_RC_TG_TAG, "Volume is set by remote controller %d (%f) -> %d%%", volume, f_volume, vol_to_pct((int32_t)volume));
+    ESP_LOGI(BT_RC_TG_TAG, "Volume is set by remote controller %d (%u) -> %d%%", volume, i_volume, vol_to_pct((int32_t)volume));
 
     display_volume(s_volume);
 }
@@ -358,9 +385,9 @@ void volume_set_by_local_host(uint8_t volume)
 {
     _lock_acquire(&s_volume_lock);
     s_volume = volume;
-    f_volume = vol_calc(volume);
+    i_volume = vol_calc_pow(volume);
     _lock_release(&s_volume_lock);
-    ESP_LOGI(BT_RC_TG_TAG, "Volume is set locally to: %d (%f) -> %d%%", volume, f_volume, vol_to_pct((int32_t)volume));
+    ESP_LOGI(BT_RC_TG_TAG, "Volume is set locally to: %d (%u) -> %d%%", volume, i_volume, vol_to_pct((int32_t)volume));
 
     if (s_volume_notify && ! s_volume_notify_disabled) {
         esp_avrc_rn_param_t rn_param;

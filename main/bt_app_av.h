@@ -10,8 +10,6 @@
 #define BT_RC_CT_TAG            "RCCT"
 
 
-#define BIT_PER_SAMPLE  16
-
 
 /**
  * @brief     callback function for A2DP sink

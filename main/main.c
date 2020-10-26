@@ -153,7 +153,7 @@ void app_main(void)
         .mode = I2S_MODE_MASTER | I2S_MODE_TX,                                  // Only TX
 #endif
         .sample_rate = default_sample_rate,
-        .bits_per_sample = BIT_PER_SAMPLE,
+        .bits_per_sample = 32,
         .channel_format = I2S_CHANNEL_FMT_RIGHT_LEFT,                           //2-channels
         .communication_format = I2S_COMM_FORMAT_STAND_I2S,
         .dma_buf_count = 12,
@@ -182,22 +182,22 @@ void app_main(void)
 
     esp_bt_controller_config_t bt_cfg = BT_CONTROLLER_INIT_CONFIG_DEFAULT();
     if ((err = esp_bt_controller_init(&bt_cfg)) != ESP_OK) {
-        ESP_LOGE(BT_AV_TAG, "%s initialize controller failed: %s\n", __func__, esp_err_to_name(err));
+        ESP_LOGE(BT_AV_TAG, "%s initialize controller failed: %s", __func__, esp_err_to_name(err));
         return;
     }
 
     if ((err = esp_bt_controller_enable(ESP_BT_MODE_CLASSIC_BT)) != ESP_OK) {
-        ESP_LOGE(BT_AV_TAG, "%s enable controller failed: %s\n", __func__, esp_err_to_name(err));
+        ESP_LOGE(BT_AV_TAG, "%s enable controller failed: %s", __func__, esp_err_to_name(err));
         return;
     }
 
     if ((err = esp_bluedroid_init()) != ESP_OK) {
-        ESP_LOGE(BT_AV_TAG, "%s initialize bluedroid failed: %s\n", __func__, esp_err_to_name(err));
+        ESP_LOGE(BT_AV_TAG, "%s initialize bluedroid failed: %s", __func__, esp_err_to_name(err));
         return;
     }
 
     if ((err = esp_bluedroid_enable()) != ESP_OK) {
-        ESP_LOGE(BT_AV_TAG, "%s enable bluedroid failed: %s\n", __func__, esp_err_to_name(err));
+        ESP_LOGE(BT_AV_TAG, "%s enable bluedroid failed: %s", __func__, esp_err_to_name(err));
         return;
     }
 
@@ -235,7 +235,7 @@ void app_main(void)
         NULL
     );                          /* Task handle. */
 
-    ESP_LOGI(BT_AV_TAG, "app_main finished: core: %u", xPortGetCoreID());
+    ESP_LOGI(BT_AV_TAG, "tasks created: app_main finished: core: %u", xPortGetCoreID());
 }
 
 void bt_app_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)

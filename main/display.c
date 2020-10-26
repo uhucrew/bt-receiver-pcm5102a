@@ -1,4 +1,5 @@
 #include <math.h>
+#include <sys/param.h>
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
@@ -24,6 +25,7 @@ extern const int32_t default_sample_rate;
 //ms per pixel decay rate
 static uint32_t vu_decay = 51;
 static uint8_t vu_x_start = 48 + 40;
+static uint8_t vu_x_end = 127;
 static uint8_t vu_x_end_l = 48 + 40;
 static uint8_t vu_x_end_r = 48 + 40;
 static uint8_t vu_x_size = 127 - (48 + 40);
@@ -66,9 +68,9 @@ static void init_vu_meter(uint32_t max) {
     }
 }
 
-void update_vu_meter(uint64_t level[2]) {
-    vu_level[0] = level[0] >> 31;
-    vu_level[1] = level[1] >> 31;
+void update_vu_meter(uint32_t level[2]) {
+    vu_level[0] = level[0];
+    vu_level[1] = level[1];
 }
 
 static uint8_t vu_x_end_l_new = 0;
@@ -79,8 +81,8 @@ static void render_vu_meter() {
     static uint32_t now_ms;
     now_ms = esp_timer_get_time() / 1000;
 
-    vu_x_end_l_new = round(vu_level[0] <= vu_min ? vu_x_start : (log10(vu_level[0]) - vu_db_min) * vu_x_db_scale + vu_x_start);
-    vu_x_end_r_new = round(vu_level[1] <= vu_min ? vu_x_start : (log10(vu_level[1]) - vu_db_min) * vu_x_db_scale + vu_x_start);
+    vu_x_end_l_new = MAX(MIN(round(vu_level[0] <= vu_min ? vu_x_start : (log10(vu_level[0]) - vu_db_min) * vu_x_db_scale + vu_x_start), vu_x_end), vu_x_start);
+    vu_x_end_r_new = MAX(MIN(round(vu_level[1] <= vu_min ? vu_x_start : (log10(vu_level[1]) - vu_db_min) * vu_x_db_scale + vu_x_start), vu_x_end), vu_x_start);
     //ESP_LOGI(TAG, "%s:  vu_x_size: %u  vu_x_db_scale: %f  vu_db_min: %f  vu_level[0]: %u  vu_level[1]: %u  vu_x_end_l_new: %u  vu_x_end_r_new: %u", __func__, vu_x_size, vu_x_db_scale, vu_db_min, vu_level[0], vu_level[1], vu_x_end_l_new, vu_x_end_r_new);
 
     if (vu_x_end_l_new >= vu_x_end_l) {
@@ -116,8 +118,8 @@ void display_init() {
     snprintf(lcd_string_buffer, sizeof(lcd_string_buffer), "     %s", dev_name);
     fb_draw_string_big (0, 0, lcd_string_buffer);
     display_sample_rate(default_sample_rate);
-    init_vu_meter(1 << 30);
-    update_vu_meter((uint64_t[2]){ 0, 0 });
+    init_vu_meter(0x7fffffff);
+    update_vu_meter((uint32_t[2]){ 0, 0 });
 
     xTaskCreate(
         display_task,           /* Task function. */
