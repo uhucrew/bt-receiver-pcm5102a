@@ -259,7 +259,7 @@ void bt_app_gap_cb(esp_bt_gap_cb_event_t event, esp_bt_gap_cb_param_t *param)
     case ESP_BT_GAP_CFM_REQ_EVT:
         ESP_LOGI(BT_AV_TAG, "ESP_BT_GAP_CFM_REQ_EVT Please compare the numeric value: %d", param->cfm_req.num_val);
 
-        snprintf(str_buf, sizeof(str_buf), "verify %d", param->cfm_req.num_val);
+        snprintf(str_buf, sizeof(str_buf), "verify %06d", param->cfm_req.num_val);
         display_state(str_buf, NULL, 0);
 
         esp_bt_gap_ssp_confirm_reply(param->cfm_req.bda, true);
