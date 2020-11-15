@@ -38,6 +38,7 @@
 #include "i2c_x.h"
 #include "display.h"
 #include "button.h"
+#include "led.h"
 
 /* event for handler "bt_av_hdl_stack_up */
 enum {
@@ -177,6 +178,9 @@ void app_main(void)
 
     i2s_set_pin(0, &pin_config);
 #endif
+
+    led_init();
+    led_off();
 
     ESP_ERROR_CHECK(esp_bt_controller_mem_release(ESP_BT_MODE_BLE));
 
@@ -318,6 +322,7 @@ static void bt_av_hdl_stack_evt(uint16_t event, void *p_param)
         volume_set_by_local_host(volume_default);
 
         display_state("ready to pair", NULL, 0);
+        led_on(GREEN);
 
         break;
     }

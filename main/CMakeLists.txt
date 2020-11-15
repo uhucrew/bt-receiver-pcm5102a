@@ -5,5 +5,6 @@ idf_component_register(SRCS "bt_app_av.c"
                             "display.c"
                             "button.c"
                             "nvs_devices.c"
+                            "led.c"
                             "main.c"
                     INCLUDE_DIRS ".")

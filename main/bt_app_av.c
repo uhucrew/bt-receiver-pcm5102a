@@ -22,6 +22,7 @@
 
 #include "nvs_devices.h"
 #include "display.h"
+#include "led.h"
 
 
 // AVRCP used transaction label
@@ -181,12 +182,14 @@ static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
         if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_DISCONNECTED) {
             esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
             display_state("disconnected", NULL, 3);
+            led_on(RED);
             bt_i2s_task_shut_down();
         } else if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTED){
             esp_bt_gap_set_scan_mode(ESP_BT_NON_CONNECTABLE, ESP_BT_NON_DISCOVERABLE);
 
             get_remote_name(bda, &remote_name);
             display_state("connected to", remote_name, 3);
+            led_on(ORANGE);
 
             bt_i2s_task_start_up();
         }
