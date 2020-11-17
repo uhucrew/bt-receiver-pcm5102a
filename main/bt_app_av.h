@@ -10,7 +10,6 @@
 #define BT_RC_CT_TAG            "RCCT"
 
 
-
 /**
  * @brief     callback function for A2DP sink
  */

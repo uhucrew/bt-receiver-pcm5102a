@@ -63,7 +63,7 @@ static void process_button_task()
     bool bt_plus_long = false;
     bool vol_muted = false;
     bool reboot = false;
-    QueueHandle_t button_events = button_init(PIN_BIT(CONFIG_BUTTON_PLUS_PIN) | PIN_BIT(CONFIG_BUTTON_MINUS_PIN));
+    QueueHandle_t button_events = (QueueHandle_t)button_init(PIN_BIT(CONFIG_BUTTON_PLUS_PIN) | PIN_BIT(CONFIG_BUTTON_MINUS_PIN));
     for ( ;; ) {
         if (xQueueReceive(button_events, &ev, 1000 / portTICK_PERIOD_MS)) {
             if (reboot) {

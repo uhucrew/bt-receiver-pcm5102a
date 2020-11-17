@@ -25,7 +25,7 @@ Connect the ESP32-WROOM-32 usb port with yout computer. Check the ttyUSB number,
 git clone https://github.com/uhucrew/bt-receiver-pcm5102a.git
 cd bt-receiver-pcm5102a
 docker run --rm -v $PWD:/project -w /project espressif/idf idf.py build
-docker run --rm -v $PWD:/project --privileged --device=/dev/ttyUSB0 -w /project espressif/idf idf.py -p /dev/ttyUSB0 flash
+docker run -ti --rm -v $PWD:/project --privileged --device=/dev/ttyUSB0 -w /project espressif/idf idf.py -p /dev/ttyUSB0 flash monitor
 ```
 
 

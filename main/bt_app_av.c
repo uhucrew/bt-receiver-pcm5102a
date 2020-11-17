@@ -83,12 +83,14 @@ void bt_app_a2d_data_cb(const uint8_t *data, uint32_t len)
     if (len % byte_per_sample != 0) ESP_LOGE(BT_AV_TAG, "data unaligned: %u", len);
 
     if (da_data == NULL) {
-        da_len = len << 1;
+        //allocate 4 times as needed to reduce dangerous reallocate
+        da_len = len << 3;
         da_data = (uint8_t *)malloc(da_len);
         ESP_LOGI(BT_AV_TAG, "allocated da buffer memory: %u bytes", da_len);
     }
     if (da_len < len << 1) {
-        da_len = len << 1;
+        //allocate 4 times as needed to reduce dangerous reallocate
+        da_len = len << 3;
         realloc(da_data, da_len);
         ESP_LOGI(BT_AV_TAG, "reallocated da buffer memory: %u bytes", da_len);
     }
