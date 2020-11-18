@@ -118,7 +118,7 @@ void bt_app_a2d_data_cb(const uint8_t *data, uint32_t len)
     }
     update_vu_meter(level);
 
-    write_ringbuf(da_data, da_len);
+    write_ringbuf(da_data, len << 1);
     if (++s_pkt_cnt % 100 == 0) {
         ESP_LOGI(BT_AV_TAG, "Audio packet count %u", s_pkt_cnt);
         display_packets(s_pkt_cnt);
