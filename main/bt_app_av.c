@@ -16,6 +16,7 @@
 
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
+#include "freertos/timers.h"
 #include "driver/i2s.h"
 
 #include "sys/lock.h"
@@ -81,18 +82,16 @@ void bt_app_a2d_data_cb(const uint8_t *data, uint32_t len)
     static uint8_t lr;
 
     if (len % byte_per_sample != 0) ESP_LOGE(BT_AV_TAG, "data unaligned: %u", len);
+    da_len = len << 1;
 
     if (da_data == NULL) {
-        //allocate 4 times as needed to reduce dangerous reallocate
-        da_len = len << 3;
-        da_data = (uint8_t *)malloc(da_len);
-        ESP_LOGI(BT_AV_TAG, "allocated da buffer memory: %u bytes", da_len);
+        da_data = (uint8_t *)malloc(RINGBUF_SIZE);
+        ESP_LOGI(BT_AV_TAG, "allocated da buffer memory: %u bytes", RINGBUF_SIZE);
     }
-    if (da_len < len << 1) {
-        //allocate 4 times as needed to reduce dangerous reallocate
-        da_len = len << 3;
-        realloc(da_data, da_len);
-        ESP_LOGI(BT_AV_TAG, "reallocated da buffer memory: %u bytes", da_len);
+    if (RINGBUF_SIZE < da_len) {
+        ESP_LOGE(BT_AV_TAG, "audio packet size  %u  larger than buffer size  %u  bytes", da_len, RINGBUF_SIZE);
+        da_len = RINGBUF_SIZE;
+        len = RINGBUF_SIZE >> 1;
     }
     level[0] = 0;
     level[1] = 0;
@@ -118,9 +117,12 @@ void bt_app_a2d_data_cb(const uint8_t *data, uint32_t len)
     }
     update_vu_meter(level);
 
-    write_ringbuf(da_data, len << 1);
+    size_t written = write_ringbuf(da_data, da_len);
+    if (written != da_len) {
+        ESP_LOGE(BT_AV_TAG, "write_ringbuf wrote  %u  of  %u  bytes", written, da_len);
+    }
     if (++s_pkt_cnt % 100 == 0) {
-        ESP_LOGI(BT_AV_TAG, "Audio packet count %u", s_pkt_cnt);
+        ESP_LOGI(BT_AV_TAG, "Audio packet count %u  len %u", s_pkt_cnt, len);
         display_packets(s_pkt_cnt);
     }
 }
@@ -171,10 +173,17 @@ void bt_app_rc_tg_cb(esp_avrc_tg_cb_event_t event, esp_avrc_tg_cb_param_t *param
     }
 }
 
+static void display_ready(TimerHandle_t xTimer) {
+    display_state("ready to pair", NULL, 0);
+    led_on(GREEN);
+}
+
 static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
 {
     ESP_LOGD(BT_AV_TAG, "%s evt %d", __func__, event);
     esp_a2d_cb_param_t *a2d = NULL;
+    static TimerHandle_t ready_timer = NULL;
+    static int timer_id = 1;
     switch (event) {
     case ESP_A2D_CONNECTION_STATE_EVT: {
         a2d = (esp_a2d_cb_param_t *)(p_param);
@@ -185,6 +194,11 @@ static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
             esp_bt_gap_set_scan_mode(ESP_BT_CONNECTABLE, ESP_BT_GENERAL_DISCOVERABLE);
             display_state("disconnected", NULL, 3);
             led_on(RED);
+            if (ready_timer == NULL) {
+                ready_timer = xTimerCreate("dtimer", pdMS_TO_TICKS(300000), pdFALSE, &timer_id, &display_ready);
+            }
+            xTimerStart(ready_timer, 10);
+
             bt_i2s_task_shut_down();
         } else if (a2d->conn_stat.state == ESP_A2D_CONNECTION_STATE_CONNECTED){
             esp_bt_gap_set_scan_mode(ESP_BT_NON_CONNECTABLE, ESP_BT_NON_DISCOVERABLE);
@@ -345,21 +359,6 @@ static uint8_t vol_to_pct(uint8_t vol) {
 
 #define VOL_MIN         30.0
 #define VOL_MAX         65536.0
-
-/*
-//static const float vol_log_min = 3.46573590279973;      // precalculated: log(vol_min);
-//static const float vol_log_diff = 7.6246189861594;      // precalculated: log(vol_max) - log(vol_min);
-static const float vol_log_min = log(VOL_MIN);
-static const float vol_log_diff = log(VOL_MAX) - log(VOL_MIN);
-
-//calculate volume with exp function
-static uint32_t vol_calc_exp(uint8_t vol) {
-    if (vol == 0) return 0;
-    //if (vol == 0x7f) return VOL_MAX;
-
-    return floor(exp(vol_log_min + vol_log_diff / 100 * vol_to_pct(vol)));
-}
-*/
 
 #define VOL_POWER       3.0
 static const float vol_pow_min = pow(VOL_MIN, (1.0 / VOL_POWER));

@@ -133,7 +133,7 @@ static void bt_i2s_task_handler(void *arg)
 
 void bt_i2s_task_start_up(void)
 {
-    s_ringbuf_i2s = xRingbufferCreate(8 * 1024, RINGBUF_TYPE_BYTEBUF);
+    s_ringbuf_i2s = xRingbufferCreate(RINGBUF_SIZE, RINGBUF_TYPE_BYTEBUF);
     if(s_ringbuf_i2s == NULL){
         return;
     }
