@@ -22,6 +22,9 @@
 #include "nvs.h"
 #include "nvs_flash.h"
 #include "esp_system.h"
+#include "esp_system.h"
+#include "esp_int_wdt.h"
+#include "esp_task_wdt.h"
 #include "esp_log.h"
 
 #include "esp_bt.h"
@@ -39,6 +42,10 @@
 #include "display.h"
 #include "button.h"
 #include "led.h"
+#include "timer_delay.h"
+
+static const char *TAG = "BT-PCM5102 main";
+
 
 /* event for handler "bt_av_hdl_stack_up */
 enum {
@@ -49,7 +56,7 @@ enum {
 static void bt_av_hdl_stack_evt(uint16_t event, void *p_param);
 
 const char *dev_name = "UHU";
-const int32_t default_sample_rate = 44100;
+const int32_t default_sample_rate = 48000;
 static const int32_t volume_default = (int32_t)round(55.0 * 0x7f / 100.0);
 uint8_t *remote_name = NULL;
 
@@ -133,6 +140,17 @@ static void process_button_task()
 }
 
 
+void output_running_info() {
+    uint8_t loop_count = 0;
+    while (1) {
+        if (loop_count++ == 1) {
+            loop_count = 0;
+            ESP_LOGI(TAG, "task loop is running. free heap: %d", heap_caps_get_free_size(MALLOC_CAP_8BIT));
+        }
+        delay_us(10000000);
+        esp_task_wdt_reset();
+    }
+}
 
 void app_main(void)
 {
@@ -165,6 +183,8 @@ void app_main(void)
 
 
     i2s_driver_install(0, &i2s_config, 0, NULL);
+    apll_setup(default_sample_rate);
+
 #ifdef CONFIG_A2DP_SINK_OUTPUT_INTERNAL_DAC
     i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN);
     i2s_set_pin(0, NULL);
@@ -233,7 +253,16 @@ void app_main(void)
     xTaskCreate(
         process_button_task,    /* Task function. */
         "ProcessButton",        /* String with name of task. */
-        10000,                  /* Stack size in bytes. */
+        2048,                   /* Stack size in bytes. */
+        NULL,                   /* Parameter passed as input of the task */
+        0,                      /* Priority of the task. */
+        NULL
+    );                          /* Task handle. */
+
+    xTaskCreate(
+        output_running_info,    /* Task function. */
+        "LoopRunning",          /* String with name of task. */
+        2048,                   /* Stack size in bytes. */
         NULL,                   /* Parameter passed as input of the task */
         0,                      /* Priority of the task. */
         NULL

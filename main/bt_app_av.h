@@ -9,6 +9,20 @@
 #define BT_RC_TG_TAG            "RCTG"
 #define BT_RC_CT_TAG            "RCCT"
 
+static const int apll_values[][5] = {
+    {11025, 38,  80,  5, 31},
+    {16000, 147, 107, 5, 21},
+    {22050, 130, 152, 5, 15},
+    {32000, 129, 212, 5, 10},
+    {44100, 15,  8,   5, 6},
+    {48000, 136, 212, 5, 6},
+    {96000, 143, 212, 5, 2},
+    {0,     0,   0,   0, 0}
+};
+
+
+void apll_setup(int sample_rate);
+
 
 /**
  * @brief     callback function for A2DP sink

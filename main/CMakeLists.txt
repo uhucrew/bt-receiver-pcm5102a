@@ -6,5 +6,6 @@ idf_component_register(SRCS "bt_app_av.c"
                             "button.c"
                             "nvs_devices.c"
                             "led.c"
+                            "timer_delay.c"
                             "main.c"
                     INCLUDE_DIRS ".")
