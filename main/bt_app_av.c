@@ -178,20 +178,6 @@ static void display_ready(TimerHandle_t xTimer) {
     led_on(GREEN);
 }
 
-
-void apll_setup(int sample_rate) {
-    for (int i = 0; i < sizeof(apll_values)/sizeof(apll_values[0]); i++) {
-        if (apll_values[i][0] == sample_rate) {
-            rtc_clk_apll_enable(1, apll_values[i][1], apll_values[i][2], apll_values[i][3], apll_values[i][4]);
-            return;
-        }
-    }
-    ESP_LOGW(BT_AV_TAG, "no apll values for samplerate %d disable i2s apll clock", sample_rate);
-    rtc_clk_apll_enable(1, 0, 0, 0, 0);
-}
-
-
-
 static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
 {
     ESP_LOGD(BT_AV_TAG, "%s evt %d", __func__, event);
@@ -250,7 +236,6 @@ static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
             }
 
             i2s_set_clk(0, sample_rate, 32, 2);
-            apll_setup(sample_rate);
 
             ESP_LOGI(BT_AV_TAG, "Configure audio player %x-%x-%x-%x",
                      a2d->audio_cfg.mcc.cie.sbc[0],

@@ -178,12 +178,12 @@ void app_main(void)
         .dma_buf_count = 12,
         .dma_buf_len = 120,
         .intr_alloc_flags = 0,                                                  //Default interrupt priority
-        .tx_desc_auto_clear = true                                              //Auto clear tx descriptor on underflow
+        .tx_desc_auto_clear = true,                                              //Auto clear tx descriptor on underflow
+        .use_apll = true
     };
 
 
     i2s_driver_install(0, &i2s_config, 0, NULL);
-    apll_setup(default_sample_rate);
 
 #ifdef CONFIG_A2DP_SINK_OUTPUT_INTERNAL_DAC
     i2s_set_dac_mode(I2S_DAC_CHANNEL_BOTH_EN);
