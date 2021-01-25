@@ -249,7 +249,7 @@ static void bt_av_hdl_a2d_evt(uint16_t event, void *p_param)
                 sample_rate = 48000;
             }
 
-            //i2s_set_clk(0, sample_rate, 32, 2);
+            i2s_set_clk(0, sample_rate, 32, 2);
             apll_setup(sample_rate);
 
             ESP_LOGI(BT_AV_TAG, "Configure audio player %x-%x-%x-%x",

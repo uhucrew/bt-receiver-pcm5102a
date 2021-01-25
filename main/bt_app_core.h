@@ -9,7 +9,7 @@
 
 #define BT_APP_SIG_WORK_DISPATCH          (0x01)
 
-#define RINGBUF_SIZE                      48 * 1024
+#define RINGBUF_SIZE                      40 * 1024
 
 /**
  * @brief     handler for the dispatched work
