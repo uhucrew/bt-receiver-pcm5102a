@@ -4,6 +4,9 @@ Well working bluetooth adapter with a nice display and volume control buttons. T
 
 Special feature of this implementation is the exponential nearly lossless volume control. The 16 bit samples received from bluetooth layer are multiplied with a 16 bit volume value. In turn we get a 32 bit scaled value which is sent without loss to the 32 bit DA converter. With this approach no information is lost especially with low volumes. The 16 bit volume factor is calculated with x^3 function. This function meets the human sense for loudness best in my opinion.
 
+A project description in more detail in English as well as German language can be found on my blog:
+https://bastelblog.runlevel3.de/en/weekend-project/bluetooth-audio-receiver-with-pcm5102a/
+
 ## hardware
 
 ESP32-WROOM-32 connected to SSD1306 128x64 display and PCM5102A breakout board, schematics as follows:
